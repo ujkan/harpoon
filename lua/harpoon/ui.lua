@@ -6,6 +6,9 @@ local log = require("harpoon.dev").log
 
 local M = {}
 
+-- local SEPARATOR = "█"
+local SEPARATOR = "╟"
+
 Harpoon_win_id = nil
 Harpoon_bufh = nil
 
@@ -63,7 +66,9 @@ local function get_menu_items()
 
     for _, line in pairs(lines) do
         if not utils.is_white_space(line) then
-            table.insert(indices, line)
+            local pattern = ".*" .. SEPARATOR .. "(.*)"
+            local filepath = utils.get_first_match(line, pattern)
+            table.insert(indices, filepath)
         end
     end
 
@@ -97,12 +102,36 @@ function M.toggle_quick_menu()
     Harpoon_win_id = win_info.win_id
     Harpoon_bufh = win_info.bufnr
 
+    local furthest_separator_pos = -1
+    -- find at which column the farthest separator of all the lines is
+    -- in order to show the filenames right-aligned for better legibility
     for idx = 1, Marked.get_length() do
         local file = Marked.get_marked_file_name(idx)
         if file == "" then
             file = "(empty)"
         end
-        contents[idx] = string.format("%s", file)
+        local path_pattern = ".*[/\\]([%w-_.]+)$"
+        local filename = utils.get_first_match(file, path_pattern)
+        local startpos = string.len(filename)
+        furthest_separator_pos = math.max(startpos, furthest_separator_pos)
+    end
+    log.trace("FURTHEST:", furthest_separator_pos)
+
+
+    for idx = 1, Marked.get_length() do
+        local file = Marked.get_marked_file_name(idx)
+        if file == "" then
+            file = "(empty)"
+        end
+        -- assumes filenames contain only alphanumeric characters, dots (.),
+        -- underscores (_), and dashes (-)
+        local path_pattern = ".*[/\\]([%w-_.]+)$"
+        local filename = utils.get_first_match(file, path_pattern)
+        local left_padding_length = furthest_separator_pos - string.len(filename)
+        local left_padding = string.rep(" ", left_padding_length)
+        contents[idx] = string.format(
+          "%s", left_padding .. filename .. SEPARATOR .. file
+        )
     end
 
     vim.api.nvim_win_set_option(Harpoon_win_id, "number", true)

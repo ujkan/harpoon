@@ -70,6 +70,14 @@ function M.split_string(str, delimiter)
     return result
 end
 
+function M.get_first_match(str, pattern)
+    local ret = string.gmatch(str, pattern)()
+    if ret == nil then
+        return ""
+    end
+    return ret
+end
+
 function M.is_white_space(str)
     return str:gsub("%s", "") == ""
 end
