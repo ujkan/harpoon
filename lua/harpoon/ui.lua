@@ -110,7 +110,7 @@ function M.toggle_quick_menu()
         if file == "" then
             file = "(empty)"
         end
-        local path_pattern = ".*[/\\]([%w-_.]+)$"
+        local path_pattern = ".*[/\\]([%w- _.]+)$"
         local filename = utils.get_first_match(file, path_pattern)
         local startpos = string.len(filename)
         furthest_separator_pos = math.max(startpos, furthest_separator_pos)
@@ -125,7 +125,7 @@ function M.toggle_quick_menu()
         end
         -- assumes filenames contain only alphanumeric characters, dots (.),
         -- underscores (_), and dashes (-)
-        local path_pattern = ".*[/\\]([%w-_.]+)$"
+        local path_pattern = ".*[/\\]([%w- _.]+)$"
         local filename = utils.get_first_match(file, path_pattern)
         local left_padding_length = furthest_separator_pos - string.len(filename)
         local left_padding = string.rep(" ", left_padding_length)
