@@ -66,9 +66,17 @@ local function get_menu_items()
 
     for _, line in pairs(lines) do
         if not utils.is_white_space(line) then
-            local pattern = ".*" .. SEPARATOR .. "(.*)"
-            local filepath = utils.get_first_match(line, pattern)
-            table.insert(indices, filepath)
+            --local pattern = ".*" .. SEPARATOR .. "(.*)"
+            --local pattern = "[.][.][.](.*)"
+            --local displayname = utils.get_first_match(line, pattern)
+            local displayname = line
+            for idx = 1, Marked.get_length() do
+                local file = Marked.get_marked_file_name(idx)
+                local display = Marked.get_marked_display_name(idx)
+                if (display == displayname) then
+                    table.insert(indices, file)
+                end
+            end
         end
     end
 
@@ -120,6 +128,8 @@ function M.toggle_quick_menu()
 
     for idx = 1, Marked.get_length() do
         local file = Marked.get_marked_file_name(idx)
+        local display = Marked.get_marked_display_name(idx)
+        log.trace("toggle_quick_menu_DISP:", display)
         if file == "" then
             file = "(empty)"
         end
@@ -129,9 +139,10 @@ function M.toggle_quick_menu()
         local filename = utils.get_first_match(file, path_pattern)
         local left_padding_length = furthest_separator_pos - string.len(filename)
         local left_padding = string.rep(" ", left_padding_length)
-        contents[idx] = string.format(
-          "%s", left_padding .. filename .. SEPARATOR .. file
-        )
+        -- contents[idx] = string.format(
+        --   "%s", left_padding .. filename .. SEPARATOR .. file
+        -- )
+        contents[idx] = string.format("%s", display)
     end
 
     vim.api.nvim_win_set_option(Harpoon_win_id, "number", true)
@@ -216,6 +227,7 @@ function M.nav_file(id)
 
     local mark = Marked.get_marked_file(idx)
     local filename = vim.fs.normalize(mark.filename)
+    log.trace("nav_file_NAME(): Fname", filename)
     local buf_id = get_or_create_buffer(filename)
     local set_row = not vim.api.nvim_buf_is_loaded(buf_id)
 

@@ -2,6 +2,9 @@ local harpoon = require("harpoon")
 local utils = require("harpoon.utils")
 local log = require("harpoon.dev").log
 
+
+local SEPARATOR = "╟"
+
 -- I think that I may have to organize this better.  I am not the biggest fan
 -- of procedural all the things
 local M = {}
@@ -82,6 +85,16 @@ end
 
 local function create_mark(filename)
     local cursor_pos = vim.api.nvim_win_get_cursor(0)
+    log.trace("_create_mark(): ", string.len(filename))
+    local truncatelen = math.max(1, string.len(filename) - 52)
+    local displayname = ""
+    local left_padding_len = math.max(56 - string.len(filename), 0)
+    local left_padding = string.rep(" ", left_padding_len)
+    if (truncatelen > 1) then
+       displayname = "..."
+    end
+    displayname = left_padding .. displayname .. filename:sub(truncatelen, -1)
+
     log.trace(
         string.format(
             "_create_mark(): Creating mark at row: %d, col: %d for %s",
@@ -90,8 +103,15 @@ local function create_mark(filename)
             filename
         )
     )
+    log.trace(
+         string.format(
+            "_create_mark(): With display name %s",
+            displayname
+        )
+    )
     return {
         filename = filename,
+        displayname = displayname,
         row = cursor_pos[1],
         col = cursor_pos[2],
     }
@@ -320,6 +340,17 @@ function M.get_marked_file_name(idx, marks)
     end
     log.trace("get_marked_file_name():", mark and mark.filename)
     return mark and mark.filename
+end
+
+function M.get_marked_display_name(idx, marks)
+    local mark
+    if marks ~= nil then
+        mark = marks[idx]
+    else
+        mark = harpoon.get_mark_config().marks[idx]
+    end
+    log.trace("get_marked_display_name():", mark and mark.displayname)
+    return mark and mark.displayname
 end
 
 function M.get_length(marks)
